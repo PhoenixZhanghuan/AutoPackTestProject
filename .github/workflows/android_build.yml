@@ -1,76 +1,36 @@
-name: Build Android App
+name: Build Android Release
 
 on:
   push:
-    branches: [ main ]
-
+    branches:
+      - main
 
 jobs:
-  assemble:
+  build-android:
     runs-on: ubuntu-latest
     steps:
-      # 使用checkout 拉去代码库
-      - name: checkout
-        uses: actions/checkout@v3
+    - uses: actions/checkout@v2
 
-      - name: Get yarn cache directory path
-        id: yarn-cache-dir-path
-        run: echo "dir=$(yarn cache dir)" >> $GITHUB_OUTPUT
+    - name: Setup JDK
+      uses: actions/setup-java@v2
+      with:
+        java-version: '11'
+        distribution: 'adopt'
 
-      - uses: actions/cache@v3
-        id: yarn-cache # use this to check for `cache-hit` (`steps.yarn-cache.outputs.cache-hit != 'true'`)
-        with:
-          path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
-          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-yarn-
+    - name: Install dependencies
+      run: |
+        npm install
+        npm install -g react-native-cli
 
-      - name: Install Dependencies
-        run: |
-          yarn
+    - name: Build Android Release
+      env:
+        ANDROID_HOME: /usr/local/lib/android/sdk
+      run: |
+        cd android
+        ./gradlew assembleRelease
 
-      - name: cache gradle
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: |
-            ${{ runner.os }}-gradle-
-
-      - name: Make Gradlew Executable
-        run: cd android && chmod +x ./gradlew
-
-      - name: Generate App APK
-        run: |
-          cd android && ./gradlew assembleRelease --no-daemon
-
-      # - name: Sign app APK
-      #   uses: r0adkll/sign-android-release@v1
-      #   # ID used to access action output
-      #   id: sign_app
-      #   with:
-      #     releaseDirectory: android/app/build/outputs/apk/release
-      #     signingKeyBase64: ${{ secrets.SIGNING_KEY }}
-      #     alias: ${{ secrets.KEY_ALIAS }}
-      #     keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
-      #     keyPassword: ${{ secrets.KEY_PASSWORD }}
-      
-      # - name: get version
-      #   id: rn_version
-      #   run: |
-      #     echo "version=$(cat package.json | jq '.version' | tr -d '"')" >> $GITHUB_OUTPUT
-
-      # - name: rename file with version
-      #   id: rename
-      #   run: |
-      #     mv ${{steps.sign_app.outputs.signedReleaseFile}} android/app/build/outputs/apk/release/app-release-${{steps.rn_version.outputs.version}}.apk
-      #     echo "releaseFile=android/app/build/outputs/apk/release/app-release-${{steps.rn_version.outputs.version}}.apk" >> $GITHUB_OUTPUT
-
-      # - name: Upload release assets
-      #   uses: softprops/action-gh-release@v1
-      #   if: startsWith(github.ref, 'refs/tags/')
-      #   with:
-      #     files: |
-      #       ${{steps.rename.outputs.releaseFile}}
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: release-apk
+        path: android/app/build/outputs/apk/release/app-release.apk
