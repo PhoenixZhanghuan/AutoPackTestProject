@@ -1,0 +1,40 @@
+name: Build iOS Release
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-ios:
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v2
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '20' # 指定 Node.js 版本
+        
+    - name: Install dependencies
+      run: |
+        npm install
+        cd ios
+        pod install --repo-update
+        cd ..
+        
+    - name: Build iOS App
+      env: 
+        APPLE_ID: ${{ secrets.APPLE_ID }}
+        APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+      run: |
+        cd ios
+        xcodebuild -workspace YourApp.xcworkspace -scheme YourAppScheme -sdk iphoneos -configuration AppStoreDistribution archive -archivePath $PWD/build/YourApp.xcarchive
+        xcodebuild -exportArchive -archivePath $PWD/build/YourApp.xcarchive -exportOptionsPlist ExportOptions.plist -exportPath $PWD/build/ExportedApp
+        cd ..
+    
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: BuiltApp
+        path: ios/build/ExportedApp/*.ipa
