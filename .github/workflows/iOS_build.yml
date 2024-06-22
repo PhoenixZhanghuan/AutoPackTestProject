@@ -29,7 +29,7 @@ jobs:
         APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
       run: |
         cd ios
-        xcodebuild -workspace AutoPackTestProject.xcworkspace -scheme AutoPackTestProject -sdk iphoneos -configuration release archive -archivePath $PWD/build/AutoPackTestProject.xcarchive
+        xcodebuild -workspace AutoPackTestProject.xcworkspace -scheme AutoPackTestProject -sdk iphoneos -configuration Release archive -archivePath $PWD/build/AutoPackTestProject.xcarchive -allowProvisioningUpdates archive
         xcodebuild -exportArchive -archivePath $PWD/build/AutoPackTestProject.xcarchive -exportOptionsPlist Info.plist -exportPath $PWD/build/AutoPackTestProject
         cd ..
     
