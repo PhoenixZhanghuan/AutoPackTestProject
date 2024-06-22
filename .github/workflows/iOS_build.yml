@@ -29,8 +29,8 @@ jobs:
         APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
       run: |
         cd ios
-        xcodebuild -workspace YourApp.xcworkspace -scheme YourAppScheme -sdk iphoneos -configuration AppStoreDistribution archive -archivePath $PWD/build/YourApp.xcarchive
-        xcodebuild -exportArchive -archivePath $PWD/build/YourApp.xcarchive -exportOptionsPlist ExportOptions.plist -exportPath $PWD/build/ExportedApp
+        xcodebuild -workspace AutoPackTestProject.xcworkspace -scheme AutoPackTestProject -sdk iphoneos -configuration release archive -archivePath $PWD/build/AutoPackTestProject.xcarchive
+        xcodebuild -exportArchive -archivePath $PWD/build/AutoPackTestProject.xcarchive -exportOptionsPlist Info.plist -exportPath $PWD/build/AutoPackTestProject
         cd ..
     
     - name: Upload Artifacts
